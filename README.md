@@ -33,7 +33,7 @@ python3 -m http.server 8000   # then open http://localhost:8000
 ## Data
 | What | Source | Notes |
 |---|---|---|
-| Eggs, white bread, whole milk, bananas, ground coffee, gasoline | U.S. Bureau of Labor Statistics, Average Price Data (via FRED) | Annual averages 1980–2025; 2026 = Jan–Oct average; interpolated month to month. Milk before 1996 uses the half-gallon series, chain-linked to the gallon series. |
+| Eggs, white bread, whole milk, bananas, ground coffee, gasoline | U.S. Bureau of Labor Statistics, Average Price Data (via FRED) | Annual averages 1980–2025; 2026 = average of the months published so far; interpolated month to month. Milk before 1996 uses the half-gallon series, chain-linked to the gallon series. |
 | Movie ticket | NATO / Cinema United average ticket price | Approximate: interpolated between the years listed in `js/data.js`. |
 | NYC subway fare | MTA fare history | Each change on its real date. |
 | Public college tuition | College Board, *Trends in College Pricing* | Approximate: interpolated. |
