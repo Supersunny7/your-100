@@ -50,12 +50,12 @@
           <div class="shop" id="shop">
             <h1>It's 1980. You have <span class="hl">$100</span>.</h1>
             <p class="shop-sub">Fill your cart. Then scroll, and watch what 46 years of real prices do to it.</p>
-            <div class="shelf" id="shelf"></div>
             <div class="shop-actions">
               <button type="button" class="btn" id="surpriseBtn">🎲 Fill it for me</button>
               <button type="button" class="btn btn-go" id="goBtn">Start the clock ↓</button>
             </div>
-            <p class="shop-note">U.S. city-average prices from the Bureau of Labor Statistics, 1980–2026.</p>
+            <div class="shelf" id="shelf"></div>
+            <p class="shop-note">Real U.S. average prices, 1980–2026 (mostly Bureau of Labor Statistics). Sources at the bottom of the page.</p>
           </div>
 
           <div class="timepanel" id="timepanel">
@@ -76,11 +76,11 @@
             <div class="cart-body">
               <canvas class="cart-lens" id="cartLens" aria-hidden="true"></canvas>
               <canvas class="cart" id="cart" aria-label="Your shopping cart"></canvas>
-              <div class="cart-cash"><span>Cash left</span><b id="cash">$100.00</b></div>
+              <div class="cart-cash"><span id="cashL">Cash left</span><b id="cash">$100.00</b></div>
               <div class="howto" id="howto">
                 <p class="howto-h">HOW TO PLAY<span class="blink">_</span></p>
                 <ol>
-                  <li><b>1</b><span><em>Shop.</em> Spend your $100 on 1980 groceries. Tap items on the left.</span></li>
+                  <li><b>1</b><span><em>Shop.</em> Spend your $100 on 1980 groceries: tap the items, or let the 🎲 fill it.</span></li>
                   <li><b>2</b><span><em>Scroll down.</em> Time moves forward, from 1980 to today.</span></li>
                   <li><b>3</b><span><em>Watch.</em> Prices are real. Once your cart costs more than $100, items get taken.</span></li>
                 </ol>
@@ -139,9 +139,10 @@
   </section>
 
   <footer class="footer">
-    <p><b>Data:</b> BLS Average Price Data via FRED (eggs, bread, milk, bananas, coffee, gasoline; annual averages, 2026 = Jan–Oct), BLS CPI-U, MTA fare history, NATO average movie ticket (interpolated), U.S. Dept. of Labor minimum wage.</p>
-    <p><b>Built with</b> HTML, CSS, JavaScript and Matter.js (physics). Sounds are synthesized in the browser. Code and data research done with help from Claude (Anthropic). "Penny" is a parody of AI shopping assistants; no AI model is called.</p>
-    <p>Made for the BuildyourOwnWebsite Hackathon 2026.</p>
+    <p><b>How to read this:</b> all prices are real U.S. city averages in dollars, not adjusted for inflation. CPI is the U.S. consumer price index, which drives how fast the $100 bill burns. The NYC subway fare is one of the most-watched prices in America.</p>
+    <p><b>Data:</b> U.S. Bureau of Labor Statistics Average Price Data via FRED (eggs, bread, milk, bananas, coffee, gasoline; annual averages, 2026 = Jan–Oct), BLS CPI-U, MTA fare history, NATO / Cinema United average movie ticket (approximate), College Board tuition (approximate), U.S. Dept. of Labor minimum wage.</p>
+    <p><b>Built with</b> HTML, CSS, JavaScript, Matter.js 0.19 (physics, MIT) and Google Fonts. Sounds are synthesized in the browser. Code and data research done with help from Claude (Anthropic). "Penny" is a parody of AI shopping assistants; no AI model is called.</p>
+    <p>Made for the BuildyourOwnWebsite Hackathon 2026 · <a href="https://github.com/Supersunny7/your-100">Source on GitHub</a></p>
   </footer>
 
   <button type="button" class="ai-bubble" id="aiBubble" aria-label="Penny">✦ <span>Ask Penny</span></button>

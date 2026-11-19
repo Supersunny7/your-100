@@ -9,7 +9,7 @@
   const MON = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
   const monthOf = (t) => Math.min(11, Math.floor((t % 1) * 12));
 
-  const ITEMS = TT.ITEMS.filter((i) => i.id !== "stamp");
+  const ITEMS = TT.ITEMS;
   const byId = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
   const START = TT.START, END = TT.END, T0 = START + 0.001;
   const AGENT_T = 2025.55;
@@ -34,11 +34,21 @@
   PACE.forEach(([t0, v], i) => { const t1 = i + 1 < PACE.length ? PACE[i + 1][0] : END; segs.push({ t0, t1, d0: acc, v }); acc += (t1 - t0) * v; });
   const TOTAL_VH = acc;
   const journey = $("#journey");
-  const OUTRO_VH = 70;
-  journey.style.height = `calc(${(TOTAL_VH + OUTRO_VH).toFixed(0)}vh + 100vh)`;
-  let jTop = 0, vh = innerHeight;
-  const measure = () => { jTop = journey.offsetTop; vh = innerHeight; };
-  measure(); addEventListener("resize", measure); addEventListener("load", measure);
+  const OUTRO_VH = 35;
+  let jTop = 0, vh = innerHeight, lastW = innerWidth;
+  const measure = () => {
+    journey.style.height = `${Math.round(((TOTAL_VH + OUTRO_VH) / 100) * vh + innerHeight)}px`;
+    jTop = journey.offsetTop;
+  };
+  measure();
+  addEventListener("load", measure);
+  addEventListener("resize", () => {
+    // a phone's address bar showing/hiding changes only the height: ignore it, so time doesn't jump
+    if (innerWidth === lastW && Math.abs(innerHeight - vh) < 160) return;
+    const keep = S.t;
+    lastW = innerWidth; vh = innerHeight; measure();
+    if (!S.shopMode) { snapNext = true; scrollTo(0, jTop + (dFromT(keep) / 100) * vh); }
+  });
   const dNow = () => ((scrollY - jTop) / vh) * 100; // scroll position in vh
   function tFromD(d) {
     if (d <= SHOP_VH) return START;
@@ -148,7 +158,7 @@
       c.classList.toggle("has", n > 0);
       c.classList.toggle("cant", price(it.id, T0) > cash() + 1e-9);
     }
-    $("#cash").textContent = fmt(Math.max(0, cash()));
+    set($("#cash"), fmt(Math.max(0, cash()))); set($("#cashL"), "Cash left");
     const spent = 100 - cash();
     $("#rThen").textContent = fmt(spent);
     $("#rNow").textContent = fmt(spent);
@@ -226,10 +236,11 @@
     $("#bTitle").textContent = b.title;
     cart.bump(b.ai || b.born ? 1.6 : 1.1);
     $("#bText").textContent = b.text;
+    S.beatOn = true; S.beatT = b.t;
     $("#bStat").textContent = `Your cart: ${leftNow} of ${total} items left.`;
     beatEl.className = "beat show" + (b.ai ? " ai" : "") + (b.born ? " born" : "");
     clearTimeout(beatTimer);
-    beatTimer = setTimeout(() => beatEl.classList.remove("show"), b.ai || b.born ? 2600 : 1900);
+    beatTimer = setTimeout(() => { beatEl.classList.remove("show"); S.beatOn = false; }, b.ai || b.born ? 2600 : 1900);
     if (b.ai) { cart.glitch = 1.4; TT.sound.glitch(); document.body.classList.add("glitch"); setTimeout(() => document.body.classList.remove("glitch"), 900); }
     else TT.sound.whoosh();
   }
@@ -249,10 +260,16 @@
     await wait(ms);
   }
   const agentBar = $("#agentBar"), agentMsg = $("#agentMsg");
+  let streamId = 0;
   async function stream(el, text, speed = 16) {
+    const id = ++streamId;              // a newer message cancels the one still typing
     el.textContent = "";
     if (reduce) { el.textContent = text; return; }
-    for (const tok of text.match(/\S+\s*/g) || []) { el.textContent += tok; await wait(speed + Math.random() * speed); }
+    for (const tok of text.match(/\S+\s*/g) || []) {
+      if (id !== streamId) return;
+      el.textContent += tok;
+      await wait(speed + Math.random() * speed);
+    }
   }
   async function runAgent() {
     const ag = S.agent;
@@ -304,8 +321,11 @@
     add(16, (t) => `You're 16 and can drive. Gas: ${fmt(price("gas", t))} a gallon.`);
     add(18, (t) => `You're 18. A year of public college: $${Math.round(TT.tuition(t)).toLocaleString()}.`);
     add(21, (t) => `You're 21. Minimum wage: $${TT.minWage(t).toFixed(2)} an hour.`);
-    add(age(2026), () => `That's you today, at ${age(2026)}. Your $100 buys what ${fmt((100 * TT.cpi(1980.5)) / TT.cpi(END))} did in 1980.`);
+    const today = age(2026);
+    if (today >= 1) LIFE.push({ t: END - 0.03, a: today, text: `That's you today, at ${today}. Your $100 buys what ${fmt((100 * TT.cpi(1980.5)) / TT.cpi(END))} did in 1980.` });
     LIFE.sort((a, b) => a.t - b.t);
+    // two moments too close together: move the earlier one back so neither gets swallowed
+    for (let i = LIFE.length - 2; i >= 0; i--) if (LIFE[i + 1].t - LIFE[i].t < 0.6) LIFE[i].t = LIFE[i + 1].t - 0.6;
     // timeline
     const f = (t) => ((Math.max(START, t) - START) / (END - START)) * 100;
     const seg = document.createElement("span");
@@ -323,12 +343,15 @@
     const a1980 = 1980 - born;
     $(".shop-sub").textContent = a1980 > 0
       ? `You're ${a1980}. Fill your cart, then scroll and watch what 46 years of real prices do to it.`
-      : `You won't be born for ${-a1980} years. Fill your cart anyway, then scroll and watch what real prices do to it before and after you arrive.`;
+      : a1980 === 0
+        ? `You're born this year. Fill your cart, then scroll and watch real prices grow up with you.`
+        : `You won't be born for ${-a1980} years. Fill your cart anyway, then scroll and watch what real prices do before and after you arrive.`;
   }
   const toast = $("#toast");
   let toastTimer = 0;
   function showToast(e) {
     $("#tAge").textContent = e.a === 0 ? "🍼" : e.a;
+    toast.classList.toggle("dip", e.a === "📉");
     $("#tText").textContent = e.text;
     toast.classList.add("show");
     clearTimeout(toastTimer);
@@ -384,10 +407,14 @@
     // cart contents
     if (!S.shopMode) {
       let flies = 0;
+      const back = {};
       const c = cartAt(t);
       for (const u of c.list) {
         const want = c.kept.has(u.uid), have = cart.has(u.uid);
-        if (want && !have) { cart.add(u); dropLine(u.uid); if (forward) TT.sound.drop(); }
+        if (want && !have) {
+          cart.add(u); dropLine(u.uid);
+          if (forward) { TT.sound.drop(); if (u.uid[0] === "u") back[u.id] = (back[u.id] || 0) + 1; }
+        }
         else if (!want && have) {
           // you can hang on to an item for a while by holding it... but not forever
           if (cart.held === u.uid && !reduce) {
@@ -409,6 +436,16 @@
         if (!inList.has(u.uid) && u.uid[0] === "p") dropLine(u.uid);
         if (inList.has(u.uid) && u.uid[0] === "u" && c.kept.has(u.uid)) dropLine(u.uid);
       }
+      // when prices fall, items come back: say why, so it doesn't look like a bug
+      const nBack = Object.values(back).reduce((a, b) => a + b, 0);
+      if (nBack && S.started && t - (S.dipT || 0) > 3) {
+        // name the things that actually got cheaper over the past half year
+        const fell = ITEMS.filter((it) => price(it.id, t) < price(it.id, t - 0.5) * 0.97).map((it) => it.name.toLowerCase());
+        if (fell.length) {
+          S.dipT = t;
+          queue.push({ kind: "toast", t, item: { a: "📉", text: `${fell.slice(0, 2).join(" and ").replace(/^./, (c) => c.toUpperCase())} got cheaper, so ${nBack} item${nBack > 1 ? "s" : ""} came back. Prices can fall. Just not for long.` } });
+        }
+      }
       const total = S.units.length;
       const left = S.units.filter((u) => c.kept.has(u.uid)).length;
       renderBought(c.kept);
@@ -421,7 +458,8 @@
       set($("#pennyAdd"), pb ? ` + ${pb} 🍌 Penny added` : "");
       set($("#left"), String(left));
       set($("#total"), String(total));
-      set($("#cash"), fmt(Math.max(0, 100 - c.keptCost)));
+      set($("#cash"), fmt(c.keptCost));
+      set($("#cashL"), "Your cart costs now");
       const mw = TT.minWage(t);
       const origCost = S.units.reduce((s, u) => s + price(u.id, t), 0);
       set($("#hours"), (origCost / mw).toFixed(1) + " h");
@@ -433,6 +471,11 @@
       for (const e of LIFE) if (forward && S.lastT < e.t && t >= e.t) queue.push({ kind: "toast", item: e, t: e.t });
       if (!forward) queue.length = 0;
       S.leftNow = left; S.totalNow = total;
+      if (S.beatOn) {
+        set($("#bStat"), `Your cart: ${left} of ${total} items left.`);
+        // the story has moved on: don't leave an old headline on screen
+        if (t - S.beatT > 2.2 || t < S.beatT - 0.1) { clearTimeout(beatTimer); beatEl.classList.remove("show"); S.beatOn = false; }
+      }
       // the agent
       if (t >= AGENT_T && forward && !S.agent.applied) runAgent();
       agentBar.hidden = !(S.agent.applied && t >= AGENT_T - 0.2);
@@ -450,7 +493,7 @@
     if (ai >= 0.3) lv = 2;
     if (ai >= 0.55) lv = 3;
     setAI(lv);
-    if (t < AGENT_T - 0.3) cursorEl.classList.remove("show");
+    if (t < AGENT_T - 0.3 || t > AGENT_T + 0.45) cursorEl.classList.remove("show");
 
     $("#progFill").style.width = fracT(t) * 100 + "%";
     S.lastT = t;
@@ -460,18 +503,22 @@
   const queue = [];
   let busyUntil = 0, speed = 0;
   function dispatch(now) {
-    if (!queue.length || now < busyUntil) return;
+    if (!queue.length) return;
     const key = queue.find((q) => q.item.ai || q.item.born);
+    if (now < busyUntil && !key) return;      // your birth and ChatGPT cut in line
     // while you're scrolling fast, wait; moments that fall too far behind are dropped
     // (the ChatGPT launch and your birth always get their moment)
-    if (speed > 2.2 && !key) {
+    if (speed > 3.8 && !key) {
       for (let i = queue.length - 1; i >= 0; i--) {
         const q = queue[i];
         const important = q.item.ai || q.item.born;
-        if (S.t - q.t > (important ? 4 : 1.2)) queue.splice(i, 1);
+        if (S.t - q.t > (important ? 1.5 : 1.2)) queue.splice(i, 1);
       }
       return;
     }
+    // never show something that's already old news
+    for (let i = queue.length - 1; i >= 0; i--) if (!(queue[i].item.ai || queue[i].item.born) && S.t - queue[i].t > 1.5) queue.splice(i, 1);
+    if (!queue.length) return;
     // show the most important / most recent one, drop the rest
     const pick = queue.find((q) => q.item.ai || q.item.born) || queue.filter((q) => q.kind === "beat").pop() || queue[queue.length - 1];
     queue.length = 0;
@@ -500,9 +547,16 @@
     howto.style.opacity = (1 - out).toFixed(3);
     howto.style.visibility = out >= 1 ? "hidden" : "visible";
     swapTime.style.transform = `translateY(${(40 * (1 - inn)).toFixed(1)}px)`;
-    // outro: fade to the receipt page
-    const o = Math.max(0, Math.min(1, (d - TOTAL_VH) / OUTRO_VH));
+    // outro: only once the clock has really reached today, then hand over to the receipt
+    const done = S.t >= END - 0.002;
+    const o = done ? Math.max(0, Math.min(1, (d - TOTAL_VH + 4) / OUTRO_VH)) : 0;
     outro.style.opacity = (o * o).toFixed(3);
+    document.body.classList.toggle("is-outro", o > 0.02);
+    if (done && !S.ended && d >= TOTAL_VH - 2 && !document.body.classList.contains("gated")) {
+      S.ended = true;
+      setTimeout(() => { if (dNow() >= TOTAL_VH - 6) endEl.scrollIntoView({ behavior: reduce ? "auto" : "smooth" }); }, 900);
+    }
+    if (d < TOTAL_VH - 10) S.ended = false;
     const shop = e < 0.5;
     if (shop !== S.shopMode) {
       S.shopMode = shop;
@@ -521,14 +575,23 @@
       }
       renderedT = -1;
     }
-    const target = tFromD(d);
+    let target = tFromD(d);
+    // you can't scroll faster than time: if the page gets more than ~1.5 years ahead of the
+    // clock (a flick, the End key, a scrollbar drag), gently hold the page back
+    if (!reduce && !snapNext && !S.shopMode && !playing && target - S.t > 1.5 && S.t < END) {
+      const holdD = dFromT(Math.min(END, S.t + 1.5));
+      scrollTo(0, jTop + (holdD / 100) * vh);
+      target = tFromD(holdD);
+    }
     const diff = target - S.t;
     const prev = S.t;
     if (Math.abs(diff) < 0.0004 || reduce || snapNext || document.body.classList.contains("gated")) { S.t = target; snapNext = false; queue.length = 0; }
     else {
       // ease toward the scroll position, but never faster than a few years per second
       let step = diff * 0.3;
-      const cap = MAX_YEARS_PER_SEC * dt * (S.t >= TT.CHATGPT - 0.3 ? 0.6 : 1);
+      // time slows down for the big moments (your birth, ChatGPT) so they land on screen
+      const nearKey = BEATS.some((b) => (b.ai || b.born) && b.t > S.t - 0.02 && b.t - S.t < 0.5);
+      const cap = MAX_YEARS_PER_SEC * dt * (S.t >= TT.CHATGPT - 0.3 ? 0.6 : 1) * (nearKey ? 0.35 : 1);
       if (Math.abs(step) > cap) step = Math.sign(step) * cap;
       S.t += step;
     }
@@ -541,15 +604,19 @@
   /* ================= hint ================= */
   const hint = $("#hint");
   let idle = 0;
+  function hintText() {
+    const next = BEATS.find((b) => b.t > S.t + 0.01);
+    return S.shopMode
+      ? (S.units.length ? "Now scroll down to start the clock ↓" : "Tap items to fill your cart, then scroll")
+      : next ? `Keep scrolling · next: ${next.date.slice(0, 4)} ${next.title}` : "Keep scrolling · almost today";
+  }
   function showHint() {
     const d = dNow();
     if (d < -5 || S.t >= END - 0.02 || playing || d > TOTAL_VH) return;
-    const next = BEATS.find((b) => b.t > S.t + 0.01);
-    $("#hintText").textContent = S.shopMode
-      ? (S.units.length ? "Scroll to start the clock" : "Tap items to fill your cart, then scroll")
-      : next ? `Keep scrolling · next: ${next.date.slice(0, 4)} ${next.title}` : "Keep scrolling";
+    set($("#hintText"), hintText());
     hint.classList.add("show");
   }
+  setInterval(() => { if (hint.classList.contains("show")) set($("#hintText"), hintText()); }, 250);
   addEventListener("scroll", () => { hint.classList.remove("show"); clearTimeout(idle); idle = setTimeout(showHint, 1400); }, { passive: true });
   setTimeout(showHint, 2500);
 
@@ -575,6 +642,13 @@
     playing = false; cancelAnimationFrame(raf); playBtn.classList.remove("on");
     $(".pi", playBtn).textContent = "▶"; $(".pl", playBtn).textContent = "Auto-play";
   }
+  const endEl0 = document.getElementById("end");
+  // if you arrive at the receipt early (e.g. the time is still catching up), build it as soon as time lands
+  setInterval(() => {
+    if (!endEl0.classList.contains("in") && S.units.length && S.t >= END - 0.01 && endEl0.getBoundingClientRect().top < innerHeight * 0.75) {
+      buildEnd(); endEl0.classList.add("in"); TT.sound.tear();
+    }
+  }, 300);
   playBtn.addEventListener("click", () => (playing ? stop() : play()));
   ["wheel", "touchstart"].forEach((e) => addEventListener(e, () => playing && stop(), { passive: true }));
 
@@ -612,7 +686,7 @@
   new IntersectionObserver((es) => {
     document.body.classList.toggle("at-end", es[0].isIntersecting);
     if (es[0].isIntersecting) { cursorEl.classList.remove("show"); }
-    if (es[0].isIntersecting && S.units.length) {
+    if (es[0].isIntersecting && S.units.length && S.t >= END - 0.01) {
       buildEnd();
       endEl.classList.add("in");
       TT.sound.tear();
@@ -704,7 +778,7 @@
     S.born = y;
     buildLife(y);
     gateHint.classList.remove("err");
-    gateHint.textContent = y >= START ? `LOADING ${2026 - y} YEARS OF YOUR LIFE...` : "LOADING YOUR LIFE...";
+    gateHint.textContent = y >= 2026 ? "LOADING. WELCOME, NEWBORN..." : y >= START ? `LOADING ${2026 - y} YEAR${2026 - y > 1 ? "S" : ""} OF YOUR LIFE...` : "LOADING YOUR LIFE...";
     TT.sound.buy();
     setTimeout(() => {
       gate.classList.add("off");

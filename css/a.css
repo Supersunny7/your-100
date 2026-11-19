@@ -68,7 +68,9 @@ body[data-era="80s"] .hud { font-size: 20px; font-weight: 400; }
 
 /* era label + year */
 .era-label { color: var(--muted); font-size: .85em; letter-spacing: .05em; text-transform: uppercase; }
-.year-stack { position: relative; line-height: .9; font-size: clamp(3.8rem, 8vw, 7.4rem); font-variant-numeric: tabular-nums; margin-top: 4px; }
+.year-stack { position: relative; line-height: .9; font-size: clamp(3.8rem, 8vw, 7.4rem); font-variant-numeric: tabular-nums; margin-top: 4px; transition: font-size .5s ease; }
+/* in the shop, the big year steps back so the shelf + buttons fit on a laptop screen */
+body:not(.timing) .year-stack { font-size: clamp(2.6rem, min(5.2vw, 8.5vh), 5rem); }
 .y-sizer { visibility: hidden; display: block; font: 900 1em/.95 Inter, sans-serif; letter-spacing: -.03em; }
 .y { position: absolute; left: 0; top: 0; white-space: nowrap; pointer-events: none; }
 .y-80 { opacity: var(--y80s); font: 400 1.08em/.9 VT323, monospace; color: #39ff6a; text-shadow: 0 0 14px rgba(57,255,106,.9), 0 0 40px rgba(57,255,106,.4); }
@@ -91,7 +93,7 @@ body[data-era="80s"] .hud { font-size: 20px; font-weight: 400; }
 .card.cant { opacity: .45; }
 .card.nope { animation: nope .35s; }
 @keyframes nope { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
-.c-buy { flex: 1; display: grid; grid-template-columns: auto 1fr; grid-template-areas: "e n" "e p"; column-gap: 10px; align-items: center; padding: 6px 10px; border: 0; background: none; color: var(--pfg); text-align: left; }
+.c-buy { flex: 1; min-width: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "e n" "e p"; column-gap: 10px; align-items: center; padding: 6px 10px; border: 0; background: none; color: var(--pfg); text-align: left; }
 .c-buy:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); }
 .c-emoji { grid-area: e; font-size: 1.9em; line-height: 1; text-shadow: none; }
 .c-name { grid-area: n; font-size: .9em; line-height: 1.1; }
@@ -184,7 +186,7 @@ body.ai-2 .r-ai { display: inline-block; justify-self: center; }
 .pm { position: absolute; top: 50%; width: 9px; height: 9px; translate: -50% -50%; border-radius: 50%; background: var(--fg); border: 2px solid var(--bg); }
 .pm-ai { width: 16px; height: 16px; background: var(--iri); border: 0; box-shadow: 0 0 14px #9b7bff; }
 .pm-ai em { position: absolute; bottom: 18px; left: 50%; translate: -50% 0; white-space: nowrap; font: 700 11px Inter, sans-serif; font-style: normal; color: #e7deff; background: #140f2a; padding: 2px 7px; border-radius: 999px; text-shadow: none; }
-.py { position: absolute; top: 10px; translate: -50% 0; font: 10px Inter, sans-serif; color: var(--muted); text-shadow: none; }
+.py { position: absolute; top: 10px; translate: -50% 0; font: 600 11px Inter, sans-serif; color: var(--fg); opacity: .8; text-shadow: none; }
 .hint { position: absolute; z-index: 25; left: 50%; bottom: 46px; translate: -50% 10px; padding: 9px 16px; border-radius: 999px; background: var(--accent); color: var(--afg); font: 600 13px Inter, sans-serif; text-shadow: none; white-space: nowrap; opacity: 0; transition: opacity .3s, translate .3s; pointer-events: none; }
 .hint.show { opacity: 1; translate: -50% 0; }
 .hint-arrow { display: inline-block; animation: bob 1.2s ease-in-out infinite; }
@@ -263,6 +265,26 @@ body:not(.timing) .progress { opacity: 0; }
 .footer { padding: 30px 24px 40px; background: #0b0b0d; color: #999; font: 13px/1.6 Inter, system-ui, sans-serif; text-align: center; }
 .footer p { max-width: 900px; margin: 6px auto; }
 
+/* ---------- fit the shop on short laptop screens ---------- */
+.shop-actions .btn { flex: 1 1 auto; }
+#surpriseBtn { background: var(--accent); color: var(--afg); border-color: var(--accent); }
+.card { min-width: 0; }
+.c-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-height: 820px) and (min-width: 901px) {
+  .shop { gap: 6px; padding-top: 4px; }
+  .shop h1 { font-size: 1.25em; }
+  .shop-sub { font-size: .85em; }
+  .shelf { gap: 6px; }
+  .c-buy { padding-top: 4px !important; padding-bottom: 4px !important; }
+  .c-emoji { font-size: 1.3em !important; }
+}
+
+/* ---------- ending: no clutter ---------- */
+body.is-outro .agent-cursor, body.is-outro .ai-bubble, body.is-outro .hint, body.is-outro .toast, body.is-outro .beat { opacity: 0 !important; pointer-events: none; }
+body.ai-3 .end .btn::before { content: none; }
+.end { padding-top: 48px; place-items: start center; }
+.toast.dip .t-age { background: #2e7d32; color: #fff; }
+
 /* ---------- responsive ---------- */
 @media (max-width: 900px) {
   .grid { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr) 96px; gap: 10px; padding: 52px 12px 44px; }
@@ -291,7 +313,14 @@ body:not(.timing) .progress { opacity: 0; }
   .r-foot { padding-top: 4px; }
   .r-foot b { font-size: 12px; }
   .progress { left: 14px; right: 14px; bottom: 18px; }
-  .hint { bottom: 34px; font-size: 12px; max-width: 92vw; overflow: hidden; text-overflow: ellipsis; }
+  .hint { bottom: auto; top: 44%; font-size: 12px; max-width: 92vw; overflow: hidden; text-overflow: ellipsis; }
+  .howto { top: 52px; padding: 8px 10px; font-size: 14px; width: 92%; }
+  .howto-h { font-size: 15px; margin-bottom: 4px; }
+  .howto li b { width: 18px; height: 18px; font-size: 13px; }
+  .howto ol { gap: 3px; }
+  .howto-tip { display: none; }
+  body:not(.timing) .cart-cash { display: none; }
+  .era-label { margin-top: 4px; }
   .ai-bubble { right: 12px; bottom: 150px; padding: 9px 12px; }
   .hud-btn span:not(.pi) { display: none; }
 }
@@ -340,7 +369,7 @@ body.gated { overflow: hidden; }
 /* ---------- outro: the stage hands off to the receipt ---------- */
 .outro { position: absolute; inset: 0; z-index: 45; display: grid; place-items: center; background: #121214; opacity: 0; pointer-events: none; }
 .outro p { font: 600 clamp(1.2rem, 3vw, 2rem) "JetBrains Mono", monospace; color: #f2f2f2; letter-spacing: .04em; }
-.end { padding-top: 40px; }
+.end { padding-top: 76px; }
 
 /* ---------- cart: hover price tag ---------- */
 .cart-tip { position: absolute; left: 0; top: 0; z-index: 6; pointer-events: none; display: grid; gap: 2px; min-width: 150px; padding: 7px 10px; border-radius: var(--radius, 6px);
@@ -389,3 +418,4 @@ html.has-era-cursor, html.has-era-cursor * { cursor: none !important; }
 .howto.mini .howto-h { margin: 0; font-size: 17px; }
 .blink { animation: blinkC 1s steps(1) infinite; }
 @media (max-width: 900px) { .howto { font-size: 16px; top: 8%; } .howto-h { font-size: 18px; } }
+.footer a { color: #cfcfcf; }

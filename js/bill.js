@@ -61,9 +61,9 @@
       g.strokeStyle = "#5e8a4a"; g.lineWidth = 2; g.stroke();
       g.fillStyle = "#2f5a24"; g.font = `700 ${Math.round(h * 0.34)}px Georgia, serif`; g.fillText("$", w / 2, h * 0.49);
       g.font = `600 ${Math.max(8, Math.round(h * 0.075))}px Georgia, serif`;
-      g.fillText("ONE HUNDRED DOLLARS · TIME MACHINE NOTE", w / 2, h - h * 0.13);
+      g.fillText("ONE HUNDRED DOLLARS", w / 2, h - h * 0.13, w * 0.52);
       g.font = `600 ${Math.max(8, Math.round(h * 0.07))}px Georgia, serif`;
-      g.fillText("NOT LEGAL TENDER · FOR TIME TRAVEL ONLY", w / 2, h * 0.12);
+      g.fillText("NOT LEGAL TENDER · TIME TRAVEL ONLY", w / 2, h * 0.12, w * 0.56);
     }
 
     /** amount = value left out of 100 (in 1980 dollars) */
