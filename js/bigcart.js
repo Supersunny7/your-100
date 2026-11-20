@@ -70,10 +70,19 @@
         Bodies.rectangle(w - pad + T / 2, h / 2 - 600, T, h + 1400, { ...o, angle: 0.06 })
       ];
       Composite.add(this.engine.world, this.walls);
-      // item size: big, but make ~110 items still fit
-      this.r = Math.max(14, Math.min(30, Math.sqrt((w * h * 0.5) / (110 * 3.3))));
+      this.sizeFor(this.cap || 110);
+    }
+
+    /** item size: as big as possible while `n` items still fit in the cart */
+    sizeFor(n) {
+      const r = Math.max(14, Math.min(46, Math.sqrt((this.w * this.h * 0.5) / (Math.max(25, n) * 3.3))));
+      if (this.r && Math.abs(r - this.r) < 1) return;
+      const k = this.r ? r / this.r : 1;
+      if (this.r) for (const body of this.bodies.values()) Body.scale(body, k, k);
+      this.r = r;
       this.sprites = {};
     }
+    setCapacity(n) { this.cap = n; if (this.w) this.sizeFor(n); }
 
     add(unit, fromTop = true) {
       if (this.bodies.has(unit.uid)) return;

@@ -32,7 +32,7 @@ void main() {
   // 1990s: chunky pixels
   float px = 1. + 2. * w90;
   if (w90 > .02) uv = mix(uv, (floor(uv * uRes / px) + .5) / (uRes / px), smoothstep(.02, .5, w90));
-  float ca = .002 * w80 + .0025 * min(ai, 1.) + .006 * uGlitch;
+  float ca = .002 * w80 + .0012 * min(ai, 1.) + .006 * uGlitch;
   vec4 s = T(uv);
   vec3 col = vec3(T(uv + vec2(ca, 0.)).r, s.g, T(uv - vec2(ca, 0.)).b);
   float a = max(s.a, max(T(uv + vec2(ca, 0.)).a, T(uv - vec2(ca, 0.)).a));
@@ -40,8 +40,8 @@ void main() {
     vec4 g1 = T(uv + vec2(.02 * sin(uTime * .7), -.015));
     vec4 g2 = T(uv + vec2(-.025, .02 * cos(uTime * .55)));
     vec4 g = max(g1, g2);
-    col = mix(col, max(col, g.rgb * vec3(1., .8, 1.2)), .16 * min(ai, 1.) * g.a);
-    a = max(a, g.a * .14 * min(ai, 1.));
+    col = mix(col, max(col, g.rgb * vec3(1., .8, 1.2)), .08 * min(ai, 1.) * g.a);
+    a = max(a, g.a * .06 * min(ai, 1.));
   }
   if (w80 > .01) { // phosphor bloom + scanlines
     vec4 bl = (T(uv + vec2(.004, 0.)) + T(uv - vec2(.004, 0.)) + T(uv + vec2(0., .005)) + T(uv - vec2(0., .005))) * .25;

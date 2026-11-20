@@ -150,6 +150,21 @@
     TT.sound.buy();
     shopUI();
   }
+  /* buy random things with whatever is left, keeping what you picked */
+  function fillRest() {
+    const before = cash(), mode = S.shopMode;
+    S.shopMode = true;                      // buying is only allowed in the shop
+    const ids = ITEMS.map((i) => i.id);
+    let guard = 0;
+    while (guard++ < 500) {
+      const ok = ids.filter((id) => price(id, T0) <= cash() + 1e-9);
+      if (!ok.length) break;
+      buy(ok[(Math.random() * ok.length) | 0], true);
+    }
+    S.shopMode = mode;
+    shopUI();
+    return before;
+  }
   function shopUI() {
     for (const it of ITEMS) {
       const c = $(`.card[data-id="${it.id}"]`);
@@ -164,6 +179,7 @@
     $("#rNow").textContent = fmt(spent);
     $("#goBtn").classList.toggle("ready", S.units.length > 0);
     renderBought();
+    cart.setCapacity(Math.max(S.units.length + 24, 40));
     $("#howto").classList.toggle("mini", S.units.length >= 6);
     $("#howto .howto-h").firstChild.textContent = S.units.length >= 6 ? "NOW SCROLL DOWN ↓ " : "HOW TO PLAY";
   }
@@ -274,9 +290,10 @@
   async function runAgent() {
     const ag = S.agent;
     if (ag.applied) return;
-    // favorite = item you bought most of (bananas don't count; Penny loves bananas)
+    // favorite = what you still have the most of in the cart (bananas don't count; Penny loves bananas)
     const counts = {};
-    for (const u of S.units) if (u.id !== "bananas") counts[u.id] = (counts[u.id] || 0) + 1;
+    const keptNow = cartAt(AGENT_T - 0.001).kept;
+    for (const u of S.units) if (u.id !== "bananas" && keptNow.has(u.uid)) counts[u.id] = (counts[u.id] || 0) + 1;
     const fav = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
     if (!fav) return;
     ag.applied = true; ag.fav = fav;
@@ -353,9 +370,29 @@
     $("#tAge").textContent = e.a === 0 ? "🍼" : e.a;
     toast.classList.toggle("dip", e.a === "📉");
     $("#tText").textContent = e.text;
+    S.toastT = e.t != null ? e.t : S.t;
     toast.classList.add("show");
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+  }
+
+  /* ================= price ticker: what you bought, then vs now ================= */
+  const tickerEl = $("#ticker");
+  let tickerIds = "";
+  function renderTicker(t) {
+    const ids = ITEMS.filter((it) => S.units.some((u) => u.id === it.id)).map((it) => it.id);
+    const key = ids.join();
+    if (key !== tickerIds) {
+      tickerIds = key;
+      tickerEl.innerHTML = ids.map((id) => `<div class="tk" data-id="${id}"><span class="tk-e">${byId[id].emoji}</span><span class="tk-n">${byId[id].name}</span><span class="tk-p"><i>${fmt(price(id, T0))} →</i> <b></b></span><div class="tk-bar"><span></span></div></div>`).join("");
+    }
+    for (const row of tickerEl.children) {
+      const id = row.dataset.id, p0 = price(id, T0), p1 = price(id, t);
+      set(row.querySelector("b"), fmt(p1));
+      const w = Math.min(100, ((p1 / p0) / 6) * 100).toFixed(1) + "%";   // full bar = 6× the 1980 price
+      const bar = row.querySelector(".tk-bar span");
+      if (bar.style.width !== w) bar.style.width = w;
+    }
   }
 
   /* ================= progress bar ================= */
@@ -412,8 +449,9 @@
       for (const u of c.list) {
         const want = c.kept.has(u.uid), have = cart.has(u.uid);
         if (want && !have) {
+          const wasLost = S.lines.has(u.uid);   // it was taken earlier, and now it's affordable again
           cart.add(u); dropLine(u.uid);
-          if (forward) { TT.sound.drop(); if (u.uid[0] === "u") back[u.id] = (back[u.id] || 0) + 1; }
+          if (forward) { TT.sound.drop(); if (wasLost && u.uid[0] === "u") back[u.id] = (back[u.id] || 0) + 1; }
         }
         else if (!want && have) {
           // you can hang on to an item for a while by holding it... but not forever
@@ -438,7 +476,7 @@
       }
       // when prices fall, items come back: say why, so it doesn't look like a bug
       const nBack = Object.values(back).reduce((a, b) => a + b, 0);
-      if (nBack && S.started && t - (S.dipT || 0) > 3) {
+      if (nBack && S.started && t > START + 2 && t - (S.dipT || 0) > 3) {
         // name the things that actually got cheaper over the past half year
         const fell = ITEMS.filter((it) => price(it.id, t) < price(it.id, t - 0.5) * 0.97).map((it) => it.name.toLowerCase());
         if (fell.length) {
@@ -471,6 +509,7 @@
       for (const e of LIFE) if (forward && S.lastT < e.t && t >= e.t) queue.push({ kind: "toast", item: e, t: e.t });
       if (!forward) queue.length = 0;
       S.leftNow = left; S.totalNow = total;
+      if (toast.classList.contains("show") && (t - S.toastT > 2.2 || t < S.toastT - 0.3)) { clearTimeout(toastTimer); toast.classList.remove("show"); }
       if (S.beatOn) {
         set($("#bStat"), `Your cart: ${left} of ${total} items left.`);
         // the story has moved on: don't leave an old headline on screen
@@ -485,6 +524,7 @@
     const worth = (100 * TT.cpi(1980.5)) / TT.cpi(Math.max(1980.5, t));
     bill.set(worth);
     set($("#worth"), fmt(worth));
+    renderTicker(t);
 
     // AI creep
     const ai = TT.aiAmount(t);
@@ -563,6 +603,11 @@
       document.body.classList.toggle("timing", !shop);
       if (!shop) {
         if (!S.units.length) surprise();
+        else if (cash() > 10) {
+          // half a cart has no story: the rest of your $100 goes in too
+          const left = fillRest();
+          setTimeout(() => showToast({ a: "🎲", t: S.t, text: `You still had ${fmt(left)}, so we spent the rest of your $100 for you.` }), 400);
+        }
         // restore everything you bought before the clock starts
         for (const u of S.units) if (!cart.has(u.uid)) cart.add(u);
         S.started = true;
@@ -607,7 +652,7 @@
   function hintText() {
     const next = BEATS.find((b) => b.t > S.t + 0.01);
     return S.shopMode
-      ? (S.units.length ? "Now scroll down to start the clock ↓" : "Tap items to fill your cart, then scroll")
+      ? (!S.units.length ? "Tap items to fill your cart, then scroll" : cash() > 10 ? `${fmt(cash())} left: keep shopping, or scroll and we'll fill the rest ↓` : "Now scroll down to start the clock ↓")
       : next ? `Keep scrolling · next: ${next.date.slice(0, 4)} ${next.title}` : "Keep scrolling · almost today";
   }
   function showHint() {

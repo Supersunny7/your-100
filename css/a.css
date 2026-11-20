@@ -352,7 +352,7 @@ body.gated { overflow: hidden; }
 .toast {
   position: absolute; z-index: 35; left: 50%; top: 70px; translate: -50% -20px;
   display: flex; align-items: center; gap: 12px; padding: 10px 16px 10px 10px; border-radius: 999px;
-  background: #fff3c4; color: #3b2a00; font: 600 14px Inter, sans-serif; text-shadow: none;
+  background: #fff3c4; color: #3b2a00; font: 600 14px/1.35 Inter, sans-serif; text-shadow: none; border-radius: 26px;
   box-shadow: 0 10px 30px rgba(0,0,0,.35); opacity: 0; pointer-events: none; transition: opacity .3s, translate .3s;
   max-width: min(640px, 92vw);
 }
@@ -419,3 +419,28 @@ html.has-era-cursor, html.has-era-cursor * { cursor: none !important; }
 .blink { animation: blinkC 1s steps(1) infinite; }
 @media (max-width: 900px) { .howto { font-size: 16px; top: 8%; } .howto-h { font-size: 18px; } }
 .footer a { color: #cfcfcf; }
+
+/* ---------- left column: live price ticker for what you bought ---------- */
+.ticker { display: grid; gap: 7px; margin-top: 4px; }
+.tk { display: grid; grid-template-columns: 1.4em 1fr auto; gap: 4px 8px; align-items: center; font-size: .9em; }
+.tk-e { font-size: 1.2em; }
+.tk-n { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tk-p { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tk-p i { font-style: normal; color: var(--muted); }
+.tk-p b { color: var(--accent); }
+.tk-bar { grid-column: 2 / -1; height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--fg) 12%, transparent); overflow: hidden; }
+.tk-bar span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+@media (max-width: 900px) { .ticker { display: none; } }
+@media (max-height: 760px) { .tk:nth-child(n+4) { display: none; } }
+
+/* ---------- mobile: nothing covers the controls ---------- */
+@media (max-width: 900px) {
+  body:not(.timing) .hint { display: none; }
+  .hint { top: 60%; }
+  .toast { top: 54px; width: 92vw; padding: 8px 12px 8px 8px; font-size: 13px; gap: 10px; }
+  .t-age { min-width: 36px; height: 36px; font-size: 13px; }
+  .howto { top: 6px; font-size: 13px; line-height: 1.3; }
+  .howto li { grid-template-columns: 20px 1fr; gap: 6px; }
+  .ai-bubble { display: none; }
+  .agent-bar { padding-right: 10px; }
+}
