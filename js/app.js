@@ -303,6 +303,7 @@
     ag.extra = Array.from({ length: n }, (_, i) => ({ uid: "pb" + i, id: "bananas", emoji: "🍌", name: "Bananas", seq: 100000 + i }));
     cursorEl.classList.add("show");
     agentBar.hidden = false;
+    document.body.classList.add("agent-on");
     stream(agentMsg, "Penny ✨ is optimizing your cart for maximum value…");
     const r = $("#cart").getBoundingClientRect();
     await cursorTo(r.left + r.width * 0.5, r.top + r.height * 0.6, 700);
@@ -372,8 +373,9 @@
     $("#tText").textContent = e.text;
     S.toastT = e.t != null ? e.t : S.t;
     toast.classList.add("show");
+    document.body.classList.add("toasting");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+    toastTimer = setTimeout(() => { toast.classList.remove("show"); document.body.classList.remove("toasting"); }, 2600);
   }
 
   /* ================= price ticker: what you bought, then vs now ================= */
@@ -476,7 +478,7 @@
       }
       // when prices fall, items come back: say why, so it doesn't look like a bug
       const nBack = Object.values(back).reduce((a, b) => a + b, 0);
-      if (nBack && S.started && t > START + 2 && t - (S.dipT || 0) > 3) {
+      if (nBack && S.started && t > START + 2 && t < AGENT_T - 0.8 && t - (S.dipT || 0) > 3) {
         // name the things that actually got cheaper over the past half year
         const fell = ITEMS.filter((it) => price(it.id, t) < price(it.id, t - 0.5) * 0.97).map((it) => it.name.toLowerCase());
         if (fell.length) {
@@ -497,7 +499,7 @@
       set($("#left"), String(left));
       set($("#total"), String(total));
       set($("#cash"), fmt(c.keptCost));
-      set($("#cashL"), "Your cart costs now");
+      set($("#cashL"), "What's left in your cart costs");
       const mw = TT.minWage(t);
       const origCost = S.units.reduce((s, u) => s + price(u.id, t), 0);
       set($("#hours"), (origCost / mw).toFixed(1) + " h");
@@ -603,7 +605,7 @@
       document.body.classList.toggle("timing", !shop);
       if (!shop) {
         if (!S.units.length) surprise();
-        else if (cash() > 10) {
+        else if (ITEMS.some((it) => price(it.id, T0) <= cash() + 1e-9)) {
           // half a cart has no story: the rest of your $100 goes in too
           const left = fillRest();
           setTimeout(() => showToast({ a: "🎲", t: S.t, text: `You still had ${fmt(left)}, so we spent the rest of your $100 for you.` }), 400);
@@ -617,6 +619,7 @@
         for (const u of S.agent.extra) if (cart.has(u.uid)) cart.remove(u, false);
         for (const uid of [...S.lines.keys()]) dropLine(uid);
         shopUI();
+        snapNext = true;                 // the shop is always 1980: don't count down to it
       }
       renderedT = -1;
     }
@@ -652,7 +655,7 @@
   function hintText() {
     const next = BEATS.find((b) => b.t > S.t + 0.01);
     return S.shopMode
-      ? (!S.units.length ? "Tap items to fill your cart, then scroll" : cash() > 10 ? `${fmt(cash())} left: keep shopping, or scroll and we'll fill the rest ↓` : "Now scroll down to start the clock ↓")
+      ? (!S.units.length ? "Tap items to fill your cart, then scroll" : cash() >= 0.34 ? `${fmt(cash())} left: keep shopping, or scroll and we'll fill the rest ↓` : "Now scroll down to start the clock ↓")
       : next ? `Keep scrolling · next: ${next.date.slice(0, 4)} ${next.title}` : "Keep scrolling · almost today";
   }
   function showHint() {
@@ -695,7 +698,7 @@
     }
   }, 300);
   playBtn.addEventListener("click", () => (playing ? stop() : play()));
-  ["wheel", "touchstart"].forEach((e) => addEventListener(e, () => playing && stop(), { passive: true }));
+  ["wheel", "touchstart", "keydown", "pointerdown"].forEach((e) => addEventListener(e, (ev) => { if (playing && !(ev.target && ev.target.closest && ev.target.closest("#playBtn"))) stop(); }, { passive: true }));
 
   /* ================= sound ================= */
   $("#soundBtn").addEventListener("click", (e) => {
@@ -726,6 +729,9 @@
       <div class="p-foot">With the same $100 bill today you keep <b>${kept} of ${S.units.length}</b> items.<br>THANK YOU FOR SHOPPING THROUGH TIME</div>
       ${S.born ? `<div class="p-born">${bornLine(then, now)}</div>` : ""}
       <div class="p-ai">✨ Penny suggests: have you considered bananas?</div>`;
+    const pct = Math.round((kept / S.units.length) * 100);
+    $("#endHero").innerHTML = `<p class="eh-big">Your $100 now keeps <b>${kept}</b> of <b>${S.units.length}</b> items.</p><p class="eh-sub">Same bill, same groceries, 46 years later: it buys <b>${pct}%</b> of what it bought in 1980.</p>`;
+    endEl.inert = false;
     $("#verdict").innerHTML = `Your 1980 cart now costs <b>${fmt(now)}</b>. That's <b>${(now / then).toFixed(1)}×</b> more, or <b>${hNow.toFixed(1)} hours</b> of minimum-wage work instead of ${h1980.toFixed(1)}.`;
   }
   new IntersectionObserver((es) => {
@@ -748,36 +754,56 @@
   }
   function receiptPNG() {
     const r = S.result;
-    const lines = [
-      ["TIME-MART", "c", 34], ["RECEIPT · JAN 1980 → NOV 2026", "c", 16], ["", "", 10],
-      ...r.rows.map(([id, n]) => [`${n} x ${byId[id].name.toUpperCase()}|${fmt(n * price(id, T0))}|${fmt(n * price(id, END))}`, "row", 20]),
-      ["-", "hr", 20],
-      [`TOTAL|${fmt(r.then)}|${fmt(r.now)}`, "row", 24],
-      [`MIN-WAGE HOURS|${r.h1980.toFixed(1)} h|${r.hNow.toFixed(1)} h`, "row", 20],
-      ["", "", 12], [`Same $100 today: ${r.kept} of ${r.total} items left`, "c", 18],
-      ...(S.born ? [[bornLine().replace(/ \(.*\)\.$/, "."), "c", 13]] : []),
-      ["THANK YOU FOR SHOPPING THROUGH TIME", "c", 15], ["yourhundred · made for BuildyourOwnWebsite 2026", "c", 13]
-    ];
-    const W = 640, lh = 36, H = 120 + lines.length * lh;
+    const pct = Math.round((r.kept / r.total) * 100);
+    const EMO = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"';
+    const W = 720, rowH = 34;
+    const H = 520 + r.rows.length * rowH + (S.born ? 40 : 0);
     const c = document.createElement("canvas");
-    c.width = W; c.height = H;
+    c.width = W * 2; c.height = H * 2;
     const g = c.getContext("2d");
-    g.fillStyle = "#1b1b1f"; g.fillRect(0, 0, W, H);
-    g.fillStyle = "#fbfaf4"; g.fillRect(40, 30, W - 80, H - 60);
-    g.fillStyle = "#1b1b1f";
-    for (let x = 40; x < W - 40; x += 16) { g.beginPath(); g.moveTo(x, H - 30); g.lineTo(x + 8, H - 42); g.lineTo(x + 16, H - 30); g.fill(); }
-    let y = 80;
-    for (const [text, kind, size] of lines) {
-      g.font = `${size >= 30 ? 800 : 500} ${size}px "JetBrains Mono", monospace`;
-      g.fillStyle = "#222";
-      if (kind === "c") { g.textAlign = "center"; g.fillText(text, W / 2, y); }
-      else if (kind === "row") {
-        const [a, b, cc] = text.split("|");
-        g.textAlign = "left"; g.fillText(a, 64, y);
-        g.textAlign = "right"; g.fillText(b, W - 190, y); g.fillStyle = "#c0262d"; g.fillText(cc, W - 64, y);
-      } else if (kind === "hr") { g.fillRect(64, y - 12, W - 128, 2); }
-      y += lh;
+    g.scale(2, 2);
+    // background card
+    const bg = g.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, "#0f0c1d"); bg.addColorStop(1, "#1d1036");
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    // headline
+    g.textAlign = "center"; g.fillStyle = "#fff";
+    g.font = `800 34px Inter, ${EMO}, sans-serif`;
+    g.fillText(`My $100 now keeps ${r.kept} of ${r.total} items.`, W / 2, 62);
+    g.font = `500 17px Inter, ${EMO}, sans-serif`; g.fillStyle = "#c9b8ff";
+    g.fillText(`Same cart, 1980 → 2026: ${fmt(r.then)} → ${fmt(r.now)}  (${(r.now / r.then).toFixed(1)}×, ${pct}% left)`, W / 2, 94);
+    // paper
+    const px = 60, pw = W - 120, py = 122, ph = H - 190;
+    g.fillStyle = "#fbfaf4"; g.fillRect(px, py, pw, ph);
+    g.fillStyle = "#1d1036";
+    for (let x = px; x < px + pw; x += 16) { g.beginPath(); g.moveTo(x, py + ph); g.lineTo(x + 8, py + ph - 10); g.lineTo(x + 16, py + ph); g.fill(); }
+    g.fillStyle = "#1b1b1f"; g.font = `800 28px "JetBrains Mono", monospace`; g.fillText("TIME-MART", W / 2, py + 44);
+    g.font = `500 13px "JetBrains Mono", monospace`; g.fillStyle = "#666"; g.fillText("RECEIPT · JAN 1980 → NOV 2026", W / 2, py + 66);
+    let y = py + 104;
+    const col1 = px + 24, col2 = px + pw - 150, col3 = px + pw - 24;
+    g.font = `600 13px "JetBrains Mono", monospace`; g.fillStyle = "#888";
+    g.textAlign = "left"; g.fillText("QTY ITEM", col1, y); g.textAlign = "right"; g.fillText("1980", col2, y); g.fillText("2026", col3, y);
+    y += rowH;
+    for (const [id, n] of r.rows) {
+      g.font = `500 17px "JetBrains Mono", ${EMO}, monospace`; g.fillStyle = "#222";
+      g.textAlign = "left"; g.fillText(`${n} × ${byId[id].emoji} ${byId[id].name}`, col1, y);
+      g.textAlign = "right"; g.fillText(fmt(n * price(id, T0)), col2, y);
+      g.fillStyle = "#c0262d"; g.fillText(fmt(n * price(id, END)), col3, y);
+      y += rowH;
     }
+    g.fillStyle = "#222"; g.fillRect(col1, y - 22, col3 - col1, 2);
+    g.font = `800 19px "JetBrains Mono", monospace`;
+    g.textAlign = "left"; g.fillText("TOTAL", col1, y + 4); g.textAlign = "right"; g.fillText(fmt(r.then), col2, y + 4);
+    g.fillStyle = "#c0262d"; g.fillText(fmt(r.now), col3, y + 4);
+    y += 36;
+    g.font = `500 15px "JetBrains Mono", monospace`; g.fillStyle = "#444";
+    g.textAlign = "left"; g.fillText("HOURS AT MIN. WAGE", col1, y); g.textAlign = "right"; g.fillText(`${r.h1980.toFixed(1)} h`, col2, y); g.fillText(`${r.hNow.toFixed(1)} h`, col3, y);
+    y += 40; g.textAlign = "center";
+    if (S.born) { g.font = `500 14px Inter, sans-serif`; g.fillStyle = "#5a4500"; g.fillText(bornLine(), W / 2, y); y += 30; }
+    g.font = `600 14px "JetBrains Mono", monospace`; g.fillStyle = "#666"; g.fillText("THANK YOU FOR SHOPPING THROUGH TIME", W / 2, y);
+    // footer link
+    g.font = `600 15px Inter, sans-serif`; g.fillStyle = "#c9b8ff";
+    g.fillText("Try yours → supersunny7.github.io/your-100", W / 2, H - 28);
     return c;
   }
   $("#dlBtn").addEventListener("click", () => {
@@ -791,7 +817,7 @@
   $("#copyBtn").addEventListener("click", async () => {
     if (!S.result) buildEnd();
     const r = S.result;
-    const text = `In 1980 my $100 bought ${r.total} groceries. Today that cart costs ${fmt(r.now)} (${(r.now / r.then).toFixed(1)}×), and $100 only keeps ${r.kept} of them. #YourHundred`;
+    const text = `In 1980 my $100 bought ${r.total} things. Today that cart costs ${fmt(r.now)} (${(r.now / r.then).toFixed(1)}×), and $100 only keeps ${r.kept} of them. #YourHundred`;
     try { await navigator.clipboard.writeText(text); $("#endNote").textContent = "Copied!"; }
     catch (e) { $("#endNote").textContent = text; }
   });
@@ -800,7 +826,10 @@
     S.units = []; S.agent = { applied: false, undone: false, fav: null, extra: [] };
     for (const uid of [...S.lines.keys()]) dropLine(uid);
     agentBar.hidden = true;
-    endEl.classList.remove("in");
+    document.body.classList.remove("agent-on");
+    endEl.classList.remove("in"); endEl.inert = true;
+    S.dipT = 0; S.holding = null; S.ended = false; S.result = null; queue.length = 0;
+    $("#endNote").textContent = "";
     shopUI();
     snapNext = true;
     scrollTo({ top: 0, behavior: "auto" });

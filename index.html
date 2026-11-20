@@ -15,6 +15,7 @@
   <div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateQ">
     <form class="gate-box" id="gateForm" autocomplete="off" novalidate>
       <p class="gate-top">YOUR $100 · TIME-MART v1.0 · (C) 1980</p>
+      <p class="gate-sub">It's 1980. You have $100. Let's see what's left of it.</p>
       <label class="gate-q" id="gateQ" for="gateInput">WHAT YEAR WERE YOU BORN?</label>
       <div class="gate-line"><span>&gt;</span><input id="gateInput" type="text" inputmode="numeric" maxlength="4" spellcheck="false" aria-describedby="gateHint"><span class="gate-caret" aria-hidden="true">█</span></div>
       <p class="gate-hint" id="gateHint">TYPE 4 DIGITS, THEN PRESS ENTER</p>
@@ -103,8 +104,8 @@
           <p class="r-sep">— LOST TO INFLATION —</p>
           <ol class="r-lines" id="rLines"><li class="r-empty">Losses print here as prices rise.</li></ol>
           <div class="r-foot">
-            <div><span>Your cart in 1980</span><b id="rThen">$0.00</b></div>
-            <div><span>Same cart now</span><b id="rNow" class="r-now">$0.00</b></div>
+            <div><span>Your 1980 cart cost</span><b id="rThen">$0.00</b></div>
+            <div><span>Same cart today</span><b id="rNow" class="r-now">$0.00</b></div>
           </div>
         </aside>
       </div>
@@ -125,9 +126,10 @@
     </div>
   </section>
 
-  <section class="end" id="end">
+  <section class="end" id="end" inert>
     <div class="end-inner">
       <p class="end-kicker">November 2026 · end of the line</p>
+      <div class="end-hero" id="endHero"></div>
       <div class="paper" id="finalReceipt"></div>
       <p class="verdict" id="verdict"></p>
       <div class="end-actions">
@@ -146,7 +148,7 @@
     <p>Made for the BuildyourOwnWebsite Hackathon 2026 · <a href="https://github.com/Supersunny7/your-100">Source on GitHub</a></p>
   </footer>
 
-  <button type="button" class="ai-bubble" id="aiBubble" aria-label="Penny">✦ <span>Ask Penny</span></button>
+  <div class="ai-bubble" id="aiBubble" aria-hidden="true">✦ <span>Ask Penny</span></div>
   <div class="agent-cursor" id="agentCursor" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M3 2l7 19 2.5-7.5L20 11z" fill="currentColor" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg><span>Penny ✨</span></div>
 
   <script src="vendor/matter.min.js"></script>

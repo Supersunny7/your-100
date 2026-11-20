@@ -444,3 +444,84 @@ html.has-era-cursor, html.has-era-cursor * { cursor: none !important; }
   .ai-bubble { display: none; }
   .agent-bar { padding-right: 10px; }
 }
+
+/* ================= round 4: layout, ending, era polish ================= */
+/* gate: say what this is in the first 3 seconds */
+.gate-sub { margin: 6px 0 0; color: #7dffa0; font-size: clamp(16px, 2.2vw, 22px); letter-spacing: .04em; opacity: .85; }
+
+/* ending: one line that lands before the numbers */
+.end-hero { display: none; text-align: center; }
+.end.in .end-hero { display: block; animation: fadein .8s ease both; }
+.eh-big { margin: 0; font: 800 clamp(1.8rem, 4.6vw, 3.2rem)/1.1 Inter, sans-serif; letter-spacing: -.02em; color: #fff; }
+.eh-big b { color: #ff6b6b; }
+.eh-sub { margin: 10px 0 0; color: #b9b9c6; font-size: 1.05em; }
+.eh-sub b { color: #fff; }
+
+/* toasts sit low, never over the cart header; the hint steps aside while one shows */
+.toast { top: auto; bottom: 86px; }
+body.toasting .hint { opacity: 0 !important; }
+body.agent-on .ai-bubble { opacity: 0 !important; }
+.agent-msg { white-space: normal; overflow-wrap: anywhere; }
+
+/* shelf tiles: full names on two lines, qty badge inside the tile */
+.c-name { white-space: normal; overflow: visible; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.1; font-size: .92em; }
+.c-qty { top: 4px; right: 4px; }
+.card.has .c-buy { padding-right: 56px; }
+
+/* receipt contrast in the CRT era */
+.r-none, .r-lines li.r-empty { color: #6b6b6b; }
+.r-head span, .r-sep { color: #555; }
+
+/* keyboard focus you can see */
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.gate :focus-visible { outline-color: #39ff6a; }
+
+/* era polish, after 98.css / XP.css (MIT): faithful Win98 bevels and an XP "Luna" title bar */
+.btn, .card { box-shadow:
+  inset -1px -1px rgb(10 10 10 / var(--w90s)), inset 1px 1px rgb(255 255 255 / var(--w90s)),
+  inset -2px -2px rgb(128 128 128 / var(--w90s)), inset 2px 2px rgb(223 223 223 / var(--w90s)); }
+.btn:active { box-shadow: inset -1px -1px rgb(255 255 255 / var(--w90s)), inset 1px 1px rgb(10 10 10 / var(--w90s)), inset -2px -2px rgb(223 223 223 / var(--w90s)), inset 2px 2px rgb(128 128 128 / var(--w90s)); }
+.bar::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: var(--w00s);
+  background: linear-gradient(180deg, #0997ff, #0053ee 8%, #0050ee 40%, #06f 88%, #06f 93%, #005bff 95%, #003dd7 96%, #003dd7); }
+.btn::after { content: ""; position: absolute; left: 6%; right: 6%; top: 2px; height: 45%; border-radius: 999px; pointer-events: none;
+  background: linear-gradient(rgba(255,255,255,.75), rgba(255,255,255,0)); opacity: calc(var(--w00s) * .8); }
+.btn { position: relative; }
+
+/* shorter laptop screens (1366x768, 1280x720): everything stays above the timeline */
+@media (max-height: 820px) and (min-width: 901px) {
+  body.timing .year-stack { font-size: clamp(3rem, 6vw, 5.2rem); }
+  .bill { max-width: 280px; }
+  .timepanel { gap: 8px; margin-top: 8px; }
+  .big b { font-size: 1.9em; }
+  .big span { font-size: .74em; }
+  .ticker { gap: 4px; }
+  .tk { font-size: .8em; }
+  .tk:nth-child(n+5) { display: none; }
+  .shop-note { display: none; }
+}
+@media (max-height: 740px) and (min-width: 901px) {
+  .tk:nth-child(n+4) { display: none; }
+  .bill { max-width: 230px; }
+  .worth { font-size: .85em; }
+  .c-emoji { font-size: 1.1em !important; }
+  .c-buy { padding-top: 3px !important; padding-bottom: 3px !important; }
+}
+
+/* mobile: show what you're losing, keep overlays off the numbers */
+@media (max-width: 900px) {
+  .receipt { min-height: 132px; }
+  body.timing .r-head, body.timing .r-bought, body.timing .r-sep { display: none; }
+  .r-lines { margin-top: 2px; }
+  .toast { top: auto; bottom: 200px; }
+  .hint { top: auto; bottom: 200px; }
+  .eh-big { font-size: 1.7rem; }
+  .card.has .c-buy { padding-right: 10px; }
+  .c-qty { top: -8px; right: -4px; }
+}
+.bar > * { z-index: 1; }
+@media (max-width: 900px) { .c-name { display: none; } }
+@media (max-height: 820px) and (min-width: 901px) {
+  .c-name { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .shop-sub { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card.has .c-buy { padding-right: 50px; }
+}

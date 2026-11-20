@@ -151,7 +151,18 @@
           this.updateHover();
           this.draw(now);
           this.glitch = Math.max(0, (this.glitch || 0) - 0.012);
-          if (this.lens) this.lens.render(this.weights, this.glitch, this.mouse01);
+          // keep it smooth on slow laptops: if frames get slow, redraw the lens every other frame,
+          // and if they stay very slow, fall back to the plain canvas
+          const ft = now - (this._lastF || now); this._lastF = now;
+          this._avg = (this._avg || 16) * 0.95 + Math.min(ft, 120) * 0.05;
+          this._fc = (this._fc || 0) + 1;
+          if (this.lens && this._avg > 55 && this._fc > 180) {
+            this.lens = null;
+            this.canvas.parentElement.classList.remove("lens-on");
+            const lc = this.canvas.parentElement.querySelector(".cart-lens");
+            if (lc) lc.style.display = "none";   // don't leave its last frame on top
+          }
+          if (this.lens && (this._avg < 28 || this._fc % 2 === 0)) this.lens.render(this.weights, this.glitch, this.mouse01);
         }
         requestAnimationFrame(frame);
       };
