@@ -338,7 +338,8 @@ body.gated { overflow: hidden; }
 @keyframes powerOn { 0% { opacity: 1; } 40% { opacity: 1; transform: scaleY(.02); filter: brightness(3); } 100% { opacity: 0; transform: scaleY(.02); visibility: hidden; } }
 .gate-box { display: grid; justify-items: center; gap: 18px; text-align: center; padding: 20px; }
 .gate-top { font-size: 20px; color: #1fa846; letter-spacing: .1em; }
-.gate-q { font-size: clamp(2.4rem, 7vw, 5rem); line-height: 1; }
+.gate-title { margin: 10px 0 18px; font: inherit; font-size: clamp(2.3rem, 6.6vw, 4.8rem); line-height: 1.02; color: #39ff6a; text-shadow: 0 0 14px rgba(57,255,106,.55); }
+.gate-q { font-size: clamp(1.3rem, 2.8vw, 2.1rem); line-height: 1.1; color: #b6ffc8; }
 .gate-line { display: flex; align-items: center; gap: 12px; font-size: clamp(3.4rem, 10vw, 7rem); }
 .gate-line input { width: 4.2ch; background: transparent; border: 0; border-bottom: 3px solid #1d7a37; outline: 0; color: #39ff6a; font: inherit; text-shadow: inherit; caret-color: transparent; text-align: left; letter-spacing: .06em; }
 .gate-caret { animation: blinkC 1s steps(1) infinite; margin-left: -12px; }
