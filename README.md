@@ -1,8 +1,8 @@
 # 💵 Your $100
 
-![Your $100: the same cart in 1980 and in 2026](assets/cover.jpg)
-
 **It's 1980 and you have $100. Fill a shopping cart, then scroll through 46 years of real U.S. prices and watch inflation (and then AI) take it apart.**
+
+![A 20-second run: 1980 CRT cart, Windows 95, Web 2.0, flat design, ChatGPT, Penny the AI agent, and the final receipt](assets/demo.gif)
 
 ▶ **Live site:** https://supersunny7.github.io/your-100/
 📦 **Code:** https://github.com/Supersunny7/your-100
