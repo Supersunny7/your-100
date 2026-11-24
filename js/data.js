@@ -4,7 +4,7 @@
  *
  * Groceries + gas: BLS Average Price Data via FRED, annual averages (placed at mid-year,
  *   interpolated between years). 2026 = average of the 2026 months published so far
- *   (gasoline: Jan–Sep 2026, checked against FRED on Nov 18, 2026).
+ *   (all six re-checked against FRED on Nov 24, 2026).
  * NYC subway fares, minimum wage: exact dates of each change.
  * Movie tickets (NATO / Cinema United annual averages) and tuition (College Board): interpolated
  *   between the years listed (approximate).
@@ -44,7 +44,7 @@ TT.ITEMS = [
   { id: "coffee", emoji: "☕", name: "Ground coffee", unit: "lb", ascii: "COF", kind: "annual",
     a: annual(1980, [3.143, 2.527, 2.524, 2.466, 2.578, 2.581, 3.433, 2.785, 2.769, 3.073, 2.966, 2.809, 2.577, 2.472, 3.401, 4.038, 3.430, 4.111, 3.765, 3.427, 3.450, 3.093, 2.924, 2.916, 2.849, 3.263, 3.203, 3.469, null, 3.669, 3.906, 5.191, 5.676, 5.453, 4.990, 4.720, 4.393, 4.453, 4.302, 4.141, 4.433, 4.705, 5.891, 6.156, 6.322, 8.180, 9.43]) },
   { id: "gas", emoji: "⛽", name: "Gasoline", unit: "gallon", ascii: "GAS", kind: "annual",
-    a: annual(1980, [1.245, 1.378, 1.296, 1.241, 1.212, 1.202, 0.927, 0.948, 0.946, 1.022, 1.164, 1.140, 1.127, 1.108, 1.112, 1.147, 1.231, 1.234, 1.059, 1.165, 1.510, 1.461, 1.358, 1.591, 1.880, 2.295, 2.589, 2.801, 3.266, 2.350, 2.788, 3.527, 3.644, 3.526, 3.367, 2.448, 2.142, 2.408, 2.735, 2.636, 2.174, 3.051, 4.094, 3.658, 3.449, 3.257, 3.973]) },
+    a: annual(1980, [1.245, 1.378, 1.296, 1.241, 1.212, 1.202, 0.927, 0.948, 0.946, 1.022, 1.164, 1.140, 1.127, 1.108, 1.112, 1.147, 1.231, 1.234, 1.059, 1.165, 1.510, 1.461, 1.358, 1.591, 1.880, 2.295, 2.589, 2.801, 3.266, 2.350, 2.788, 3.527, 3.644, 3.526, 3.367, 2.448, 2.142, 2.408, 2.735, 2.636, 2.174, 3.051, 4.094, 3.658, 3.449, 3.257, 4.021]) },
   { id: "movie", emoji: "🎟️", name: "Movie ticket", unit: "avg.", ascii: "MOV", kind: "anchors",
     a: { 1980: 2.69, 1990: 4.23, 2000: 5.39, 2010: 7.89, 2020: 9.18, 2025: 11.31 } },
   { id: "subway", emoji: "🚇", name: "NYC subway", unit: "single ride", ascii: "SUB", kind: "steps",
