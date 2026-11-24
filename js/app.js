@@ -241,6 +241,7 @@
     const li = S.lines.get(uid);
     if (li) { li.remove(); S.lines.delete(uid); }
     if (!S.lines.size && !rLines.querySelector(".r-empty")) rLines.innerHTML = `<li class="r-empty">Losses print here as prices rise.</li>`;
+    rLines.scrollTop = rLines.scrollHeight;
   }
 
   /* ================= beats ================= */
@@ -757,7 +758,7 @@
     const pct = Math.round((r.kept / r.total) * 100);
     const EMO = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"';
     const W = 720, rowH = 34;
-    const H = 520 + r.rows.length * rowH + (S.born ? 40 : 0);
+    const H = 420 + r.rows.length * rowH + (S.born ? 40 : 0);
     const c = document.createElement("canvas");
     c.width = W * 2; c.height = H * 2;
     const g = c.getContext("2d");

@@ -526,3 +526,13 @@ body.agent-on .ai-bubble { opacity: 0 !important; }
   .shop-sub { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .card.has .c-buy { padding-right: 50px; }
 }
+
+/* final pass: mobile receipt totals clear of the timeline; end receipt rows stay on one line */
+@media (max-width: 900px) {
+  .receipt { padding-bottom: 34px; }
+  .pm-ai em, .life::after { display: none; }
+  .paper { font-size: 11.5px; padding: 18px 14px 26px; }
+  .p-row { grid-template-columns: 1fr 64px 64px; }
+  .p-row span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gate-top { font-size: 14px; letter-spacing: .04em; }
+}
